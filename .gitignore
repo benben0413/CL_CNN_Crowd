@@ -1,0 +1,4 @@
+.idea/
+*.pyc
+/imgs/
+/tester.py
