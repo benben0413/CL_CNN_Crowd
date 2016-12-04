@@ -9,7 +9,7 @@ import pickle as cPickle
 import os.path
 
 class CNN:
-    def __init__(self,filename, batch_size = 50, learning_rate = 1e-4):
+    def __init__(self,filename, batch_size = 50, learning_rate = 1e-2):
 
         seed = 8000
         rng = numpy.random.RandomState(seed)
