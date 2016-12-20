@@ -4,6 +4,7 @@ from os.path import isfile, join
 import shutil
 import Image
 import cv2
+from CNN.Visualizer.visualize import *
 
 from CNN.CNN import *
 import numpy as np
@@ -89,6 +90,21 @@ def Test():
             #     dist = join(testing_folder, 'neg')
             #     shutil.move(currentfile, join(dist, file_names[idx]))
 
+def visualizer():
+    testing_folder = r'/home/falmasri/Desktop/Tomorrowland Belgium 2016 cropped faces/2/pos'
+    # img_name = r'0_Tomorrowland Belgium 2016 - Steve Aoki 033106.jpg'
+    img_name = r'0_Tomorrowland Belgium 2016 - Steve Aoki 063295.jpg'
+    jpgfile = np.array(Image.open(join(testing_folder,img_name)))
+
+    cnn = CNN('weights/1.3-2.pkl', batch_size=1, imageSize=[jpgfile.shape[0], jpgfile.shape[1]])
+
+    # construct_L0(cnn.classifier.layer0.W)
+    Study_L0(cnn.classifier, cnn.x, jpgfile)
 
 
-Test()
+
+
+
+visualizer()
+
+
