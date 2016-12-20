@@ -1,13 +1,9 @@
 import numpy
+
+import matplotlib.cm as cm
+import matplotlib.pyplot as plt
 import theano
 import theano.tensor as T
-
-from cnn_structure import CNN_struct
-import pickle as cPickle
-from utils import tile_raster_images
-import matplotlib.pyplot as plt
-import PIL.Image as Image
-import matplotlib.cm as cm
 
 
 def cnn_predict(classifier,x, test_datasets, batch_size):
@@ -15,36 +11,36 @@ def cnn_predict(classifier,x, test_datasets, batch_size):
     y = T.ivector('y')  # the labels are presented as 1D vector of [int] labels
     index = T.lscalar()  # index to a [mini]batch
 
-
-    # params_range = int(numpy.floor(len(numpy.array(test_datasets[0])) / batch_size))
-
-    print "...."
-
-    # construct_W_image(classifier.__getstate__())
-
     RET = []
-    # for it in range(len(test_datasets)):
-    #     test_data = test_datasets[it]
-    #     N = len(test_data)
 
-        # just zeroes
-        # test_labels = T.cast(theano.shared(numpy.asarray(numpy.zeros(batch_size), dtype=theano.config.floatX)), 'int32')
 
-    test_data = theano.shared(numpy.asarray(test_datasets, dtype=theano.config.floatX))
+    test_x, test_y = test_datasets
+    test_set_x = theano.shared(numpy.asarray(test_x, dtype=theano.config.floatX), borrow = True)
+    test_set_y = theano.shared(numpy.asarray(test_y, dtype='int32'))
 
-    output = classifier.layer8.get_y_pred()
+    n_test_batches = test_x.shape[0]
+    n_test_batches //= batch_size
 
-    ppm = theano.function(
+
+    output = classifier.layer9.errors(y)
+
+    Test_model = theano.function(
         inputs = [index],
         outputs= output,
         givens={
-            x: test_data[index * batch_size: (index + 1) * batch_size]  # ,
-            # y: test_labels
+            x: test_set_x[index * batch_size: (index + 1) * batch_size],
+            y: test_set_y[index * batch_size: (index + 1) * batch_size]
             },
         on_unused_input='warn'
     )
-    # print ppm(0)
-    return ppm(0)
+
+    test_losses = [
+        Test_model(i)
+        for i in range(n_test_batches)
+        ]
+    test_score = numpy.mean(test_losses)
+
+    return test_score
 
         # # p : predictions, we need to take argmax, p is 3-dim: (# loop iterations x batch_size x 2)
         # p = [ppm(ii) for ii in    xrange(N / batch_size)]
