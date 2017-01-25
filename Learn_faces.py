@@ -4,23 +4,26 @@ from os.path import isfile, join
 import shutil
 import Image
 import cv2
-from CNN.Visualizer.visualize import *
+from CNN.Visualizer.visualize_optimized import *
 
 from CNN.CNN import *
 import numpy as np
 import matplotlib.pyplot as plt
 
-def Train():
-    dataset_path = 'Datasets/TLand_2016_faces_13516pos_4279neg.pkl'
-
-    if(os.path.isfile(dataset_path)):
+def load_dataset(dataset_path):
+    if (os.path.isfile(dataset_path)):
         print ("Loading dataset...")
         f = open(dataset_path, 'rb')
-        Train, Valid, Test = cPickle.load(f)
+        ds = cPickle.load(f)
         f.close()
+        return ds
     else:
         print "Dataset not found"
         sys.exit()
+
+def Train():
+    dataset_path = 'Datasets/TLand_2016_faces_13516pos_4279neg.pkl'
+    Train, Valid, Test = load_dataset(dataset_path)
 
     imageSize = [100, 100]
     testing = 1
@@ -28,10 +31,10 @@ def Train():
     for i in range(testing):
         learning_rate = 10 ** np.random.uniform(-5, -8)
         print ("learning %d test" %i)
-        cnn = CNN('weights/1.3-3.pkl', learning_rate= 1e-5, batch_size=50, imageSize = imageSize)
+        cnn = CNN('weights/5.pkl', learning_rate= 3e-6, batch_size=50, imageSize = imageSize)
         if testing > 1:
             saving = False
-        # cnn.fit([Train, Valid], save_params=saving, plot_fig= saving)
+        cnn.fit([Train, Valid], save_params=saving, plot_fig= saving)
 
         test_error = cnn.predict(Test, False)
         print "Test loss: %2f   " %(test_error *100)
@@ -91,20 +94,30 @@ def Test():
             #     shutil.move(currentfile, join(dist, file_names[idx]))
 
 def visualizer():
-    testing_folder = r'/home/falmasri/Desktop/Tomorrowland Belgium 2016 cropped faces/2/pos'
-    # img_name = r'0_Tomorrowland Belgium 2016 - Steve Aoki 033106.jpg'
-    img_name = r'0_Tomorrowland Belgium 2016 - Steve Aoki 063295.jpg'
+    # testing_folder = r'/home/falmasri/Desktop/Tomorrowland Belgium 2016 cropped faces/2/pos'
+    testing_folder = r'/home/falmasri/Desktop'
+    # img_name = r'0_Tomorrowland Belgium 2016 - Steve Aoki 063295.jpg'
+    img_name = r'Tomorrowland B.jpg'
     jpgfile = np.array(Image.open(join(testing_folder,img_name)))
+    print("original Image size is:  ", jpgfile.shape)
+    # dataset_path = 'Datasets/TLand_2016_faces_13516pos_4279neg.pkl'
+    # Train, Valid, Test = load_dataset(dataset_path)
+    # tr_x, tr_y = Train
+    # jpgfile = tr_x[0]
 
-    cnn = CNN('weights/1.3-2.pkl', batch_size=1, imageSize=[jpgfile.shape[0], jpgfile.shape[1]])
+    cnn = CNN('weights/5.2.pkl', batch_size=1, imageSize=[jpgfile.shape[0], jpgfile.shape[1]])
+    # print jpgfile[7][6:10]
+    # tosave = [jpgfile, cnn.classifier.layer0.W.get_value()]
+    # file_name = 'toupload.pkl'
+    # f = file(file_name, 'wb')
+    # cPickle.dump(tosave, f, protocol=cPickle.HIGHEST_PROTOCOL)
+    # f.close()
 
-    # construct_L0(cnn.classifier.layer0.W)
-    Study_L0(cnn.classifier, cnn.x, jpgfile)
-
-
-
-
+    img= Attention_opt(cnn.classifier, cnn.x, cnn.nkerns, jpgfile)
+    # plt.imshow(img)
+    # plt.show()
+    # Study3_L0(cnn.classifier, cnn.x, jpgfile)
 
 visualizer()
 
-
+# Train()

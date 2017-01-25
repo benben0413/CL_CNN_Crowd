@@ -20,8 +20,8 @@ class CNN_struct3(object):
     def __init__(self, rng, input, nkerns, batch_size, image_size, image_dimension):
         # Reshape matrix of rasterized images of shape (batch_size, size[0] * size[1])
         # to a 4D tensor, compatible with our LeNetConvPoolLayer
-        self.layer0_input = input.reshape((batch_size, image_dimension, image_size[0], image_size[1]))
-
+        # self.layer0_input = input.reshape((batch_size, image_dimension, image_size[0], image_size[1]))
+        self.layer0_input = input.transpose(0, 3, 1, 2)
         # Construct the first convolutional pooling layer:
         # filtering reduces the image size to (100-7+1 , 100-7+1) = (94, 94)
         # 4D output tensor is thus of shape (batch_size, nkerns[0], 94, 94)

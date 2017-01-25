@@ -50,7 +50,7 @@ class CNN:
 
         # save parameters
         if save_params:
-            self.file_name= 'weights/1.3-3.pkl'
+            self.file_name= 'weights/5.2.pkl'
             f = file(self.file_name, 'wb')
             cPickle.dump(self.classifier.__getstate__(), f, protocol=cPickle.HIGHEST_PROTOCOL)
             f.close()

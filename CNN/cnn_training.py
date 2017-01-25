@@ -10,7 +10,7 @@ from Optimizier.optimization import *
 
 # from sklearn import preprocessing
 
-def fit_predict(classifier, x, data, batch_size, learning_rate, plot_fig= True, n_epochs=300):
+def fit_predict(classifier, x, data, batch_size, learning_rate, plot_fig= True, n_epochs=250):
 
     train, valid = data
     train_x, train_y = train
@@ -135,6 +135,9 @@ def fit_predict(classifier, x, data, batch_size, learning_rate, plot_fig= True, 
             valid_loss = validate_model(0)
             this_validation_loss.append(valid_loss)
 
+            # valid_loss = validate_model(idx_v)
+            # this_validation_loss.append(valid_loss)
+
         this_Training_loss = []
         for idx_t in range(n_train_batches):
             data_xt_updated, data_yt_updated = update_train_sharedVal(train_x, train_y, idx_t, batch_size)
@@ -182,7 +185,6 @@ def fit_predict(classifier, x, data, batch_size, learning_rate, plot_fig= True, 
     end_time = time.clock()
     print >> sys.stderr, ('The code ran for %.2fm' % ((end_time - start_time) / 60.))
 
-    #//TODO add training classification beside the cost
     #//TODO move the plot to the class before to add test classification to the plot
     if plot_fig:
         plt.plot(total_cost,'r')

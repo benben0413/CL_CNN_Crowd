@@ -2,7 +2,6 @@
 *.pyc
 /imgs/
 /tester.py
-CNN/Visualizer/
 Datasets/
 converter.sh
 helpers/pos_neg_sizes.pkl
@@ -35,3 +34,6 @@ weights/FCL/8.pkl
 weights/FCL/9.pkl
 weights/FCL/cost_valid_curves/
 weights/cost_valid_curves/
+/helpers/
+helpers/
+weights/
