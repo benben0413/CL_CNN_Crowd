@@ -31,7 +31,7 @@ def Train():
     for i in range(testing):
         learning_rate = 10 ** np.random.uniform(-5, -8)
         print ("learning %d test" %i)
-        cnn = CNN('weights/5.pkl', learning_rate= 3e-6, batch_size=50, imageSize = imageSize)
+        cnn = CNN('weights/FCNN-noP/1.pkl', learning_rate= 3e-6, batch_size=50, imageSize = imageSize)
         if testing > 1:
             saving = False
         cnn.fit([Train, Valid], save_params=saving, plot_fig= saving)
@@ -118,6 +118,6 @@ def visualizer():
     # plt.show()
     # Study3_L0(cnn.classifier, cnn.x, jpgfile)
 
-visualizer()
+# visualizer()
 
-# Train()
+Train()

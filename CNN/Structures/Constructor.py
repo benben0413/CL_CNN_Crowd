@@ -77,7 +77,7 @@ class HiddenLayer(object):
 class LeNetConvPoolLayer(object):
     """Pool Layer of a convolutional network """
 
-    def __init__(self, rng, input, filter_shape, image_shape, poolsize=(2, 2), pool_flag = True, ig_border = True):
+    def __init__(self, rng, input, filter_shape, image_shape, poolsize=(2, 2), pool_flag = False, ig_border = True):
         """
         Allocate a LeNetConvPoolLayer with shared variable internal parameters.
 

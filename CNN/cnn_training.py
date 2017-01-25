@@ -21,11 +21,15 @@ def fit_predict(classifier, x, data, batch_size, learning_rate, plot_fig= True, 
     n_train_batches //= batch_size
     n_valid_batches //=batch_size
 
-    train_set_x = theano.shared(numpy.asarray(train_x[0:batch_size], dtype=theano.config.floatX), borrow=True)
-    train_set_y = theano.shared(numpy.asarray(train_y[0:batch_size], dtype='int32'))
+    print n_train_batches
+    print n_valid_batches
 
-    valid_set_x = theano.shared(numpy.asarray(valid_x[0:batch_size], dtype=theano.config.floatX), borrow=True)
-    valid_set_y = theano.shared(numpy.asarray(valid_y[0:batch_size], dtype='int32'))
+
+    train_set_x = theano.shared(numpy.asarray(train_x, dtype=theano.config.floatX), borrow=True) #[0:batch_size]
+    train_set_y = theano.shared(numpy.asarray(train_y, dtype='int32')) #[0:batch_size]
+
+    valid_set_x = theano.shared(numpy.asarray(valid_x, dtype=theano.config.floatX), borrow=True) #[0:batch_size]
+    valid_set_y = theano.shared(numpy.asarray(valid_y, dtype='int32')) #[0:batch_size]
 
     y = T.ivector('y')  # the labels are presented as 1D vector of [int] labels
     index = T.lscalar()  # index to a [mini]batch
@@ -45,7 +49,7 @@ def fit_predict(classifier, x, data, batch_size, learning_rate, plot_fig= True, 
     grads = T.grad(cost, classifier.params)
 
 
-    opt = gd_optimizer('nestrov', classifier.params)
+    opt = gd_optimizer('sgd', classifier.params)
     updates = opt.update_param(grads, classifier.params, learning_rate, momentum= 0.9)
 
     # compiling a Theano function `train_model` that returns the cost, but
@@ -69,6 +73,17 @@ def fit_predict(classifier, x, data, batch_size, learning_rate, plot_fig= True, 
         },
         on_unused_input='ignore'
     )
+
+    Train_model_loss = theano.function(
+        inputs=[index],
+        outputs=classifier.layer9.errors(y),
+        givens={
+            x: train_set_x[index * batch_size:(index + 1) * batch_size],
+            y: train_set_y[index * batch_size:(index + 1) * batch_size]
+        },
+        on_unused_input='ignore'
+    )
+
 
     verifier_model = theano.function(
         inputs=[index],
@@ -103,11 +118,11 @@ def fit_predict(classifier, x, data, batch_size, learning_rate, plot_fig= True, 
         for minibatch_idx in range(n_train_batches):
 
             # print ("batch_no: %d;    epoch: %d" %(minibatch_idx,epoch))
-            data_x_updated,data_y_updated = update_train_sharedVal(train_x, train_y, minibatch_idx, batch_size)
-            train_set_x.set_value(data_x_updated)
-            train_set_y.set_value(data_y_updated)
+            # data_x_updated,data_y_updated = update_train_sharedVal(train_x, train_y, minibatch_idx, batch_size)
+            # train_set_x.set_value(data_x_updated)
+            # train_set_y.set_value(data_y_updated)
 
-            tr_cost = train_model(0)
+            tr_cost = train_model(minibatch_idx)
             # temp = verifier_model(0)[0][0]
             # print np.array(temp, dtype=theano.config.floatX) - np.array(layer6_weights_delta, dtype=theano.config.floatX)
             # layer6_weights_delta = temp
@@ -129,22 +144,26 @@ def fit_predict(classifier, x, data, batch_size, learning_rate, plot_fig= True, 
 
         this_validation_loss = []
         for idx_v in range(n_valid_batches):
-            data_xv_updated, data_yv_updated = update_valid_sharedVal(valid_x, valid_y, idx_v, batch_size)
-            valid_set_x.set_value(data_xv_updated)
-            valid_set_y.set_value(data_yv_updated)
-            valid_loss = validate_model(0)
-            this_validation_loss.append(valid_loss)
-
-            # valid_loss = validate_model(idx_v)
+            # data_xv_updated, data_yv_updated = update_valid_sharedVal(valid_x, valid_y, idx_v, batch_size)
+            # valid_set_x.set_value(data_xv_updated)
+            # valid_set_y.set_value(data_yv_updated)
+            # valid_loss = validate_model(0)
             # this_validation_loss.append(valid_loss)
+
+            valid_loss = validate_model(idx_v)
+            this_validation_loss.append(valid_loss)
 
         this_Training_loss = []
         for idx_t in range(n_train_batches):
-            data_xt_updated, data_yt_updated = update_train_sharedVal(train_x, train_y, idx_t, batch_size)
-            valid_set_x.set_value(data_xt_updated)
-            valid_set_y.set_value(data_yt_updated)
-            train_loss = validate_model(0)
+            # data_xt_updated, data_yt_updated = update_train_sharedVal(train_x, train_y, idx_t, batch_size)
+            # valid_set_x.set_value(data_xt_updated)
+            # valid_set_y.set_value(data_yt_updated)
+            # train_loss = validate_model(0)
+            # this_Training_loss.append(train_loss)
+
+            train_loss = Train_model_loss(idx_t)
             this_Training_loss.append(train_loss)
+
 
         # this_validation_loss = [validate_model(i) for i
         #                              in range(n_valid_batches)]
@@ -204,18 +223,3 @@ def update_valid_sharedVal(valid_x, valid_y, x, batch_size):
     end = st + batch_size
     return numpy.asarray(valid_x[st:end], dtype=theano.config.floatX), numpy.asarray(valid_y[st:end], dtype='int32')
 
-
-
-
-def print_weights_values(classifier):
-    print "conv 0:"
-    print classifier.__getstate__()[16][0][0]
-
-    print "conv 3:"
-    print classifier.__getstate__()[10][0][0]
-
-    print "hid 1:"
-    print classifier.__getstate__()[4][0]
-
-    print "softmax "
-    print classifier.__getstate__()[0][0]

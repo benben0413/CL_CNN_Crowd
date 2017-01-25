@@ -2,6 +2,7 @@ import os.path
 import pickle as cPickle
 
 from Structures.cnn_structure3 import *
+from Structures.cnn_structure4 import *
 from Sequemtial_cnn_Prediction import *
 from cnn_Prediction import cnn_predict
 from cnn_training import fit_predict
@@ -13,7 +14,8 @@ class CNN:
 
         seed = 8000
         rng = numpy.random.RandomState(seed)
-        self.nkerns = [64, 64, 96, 96, 128, 128, 128]
+        self.nkerns = [64, 96, 128, 128, 256, 256, 512]
+        # self.nkerns = [64, 64, 96, 96, 128, 128, 128]
         # self.nkerns = [64, 128, 128, 256, 512, 512, 512]
         # self.nkerns = [32, 64, 64, 96, 128, 128]
         self.batch_size = batch_size
@@ -26,7 +28,7 @@ class CNN:
         print '... building the model'
 
         # construct the CNN class
-        self.classifier = CNN_struct3(
+        self.classifier = CNN_struct4(
             rng=rng,
             input=self.x,
             nkerns=self.nkerns,
@@ -50,7 +52,7 @@ class CNN:
 
         # save parameters
         if save_params:
-            self.file_name= 'weights/5.2.pkl'
+            # self.file_name= 'weights/5.2.pkl'
             f = file(self.file_name, 'wb')
             cPickle.dump(self.classifier.__getstate__(), f, protocol=cPickle.HIGHEST_PROTOCOL)
             f.close()
