@@ -3,7 +3,7 @@ import numpy
 import theano
 import theano.tensor as T
 from CNN.Optimizier.weights_initialize import *
-from theano.tensor.nnet import conv
+from theano.tensor.nnet import conv2d
 from theano.tensor.signal import pool
 
 
@@ -54,9 +54,8 @@ class HiddenLayer(object):
             W_shape = (n_in,n_out)
             w_values, b_values = generate_weights(rng, W_shape, 0, 0, 'relu', n_out)
             W = theano.shared(value=w_values, name='W', borrow=True)
-
-        if b is None:
             b = theano.shared(value=b_values, name='b', borrow=True)
+
 
         self.W = W
         self.b = b
@@ -77,7 +76,7 @@ class HiddenLayer(object):
 class LeNetConvPoolLayer(object):
     """Pool Layer of a convolutional network """
 
-    def __init__(self, rng, input, filter_shape, image_shape, poolsize=(2, 2), pool_flag = False, ig_border = True):
+    def __init__(self, rng, input, filter_shape, image_shape, subsample=(1,1), poolsize=(2, 2), pool_flag = False, ig_border = True):
         """
         Allocate a LeNetConvPoolLayer with shared variable internal parameters.
 
@@ -119,11 +118,12 @@ class LeNetConvPoolLayer(object):
         self.b = theano.shared(value=b_values, borrow=True)
 
         # convolve input feature maps with filters
-        conv_out = conv.conv2d(
+        conv_out = conv2d(
             input=input,
             filters=self.W,
+            input_shape=image_shape,
             filter_shape=filter_shape,
-            image_shape=image_shape
+            subsample=subsample
             # ,border_mode='same'
         )
         self.rectified_conv_out = T.nnet.relu(conv_out + self.b.dimshuffle('x', 0, 'x', 'x'))
@@ -180,10 +180,11 @@ class AvgPoolLayer(object):
         #downsample.max_pool_2d
 
         poolsize = (image_shape[0], image_shape[1])
+        total_cells = image_shape[0] * image_shape[1]
         pooled_out = pool.pool_2d(
             input= self.input,
-            ds=poolsize,
+            ws=poolsize,
             ignore_border=True,
             mode= 'average_exc_pad'
         )
-        self.output = pooled_out
+        self.output = pooled_out * total_cells

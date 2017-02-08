@@ -1,9 +1,8 @@
-import numpy as np
 import matplotlib.pyplot as plt
-import theano
-import theano.tensor as T
-import cv2
-from deconv_constructor import *
+
+from CNN.Visualizer.struct3.deconv_constructor import *
+
+
 # from DeconvHelper import switchs
 
 

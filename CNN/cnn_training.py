@@ -6,11 +6,11 @@ from math import isnan
 import matplotlib.pyplot as plt
 
 from Optimizier.optimization import *
-
+from helpers.utilities import SaveData
 
 # from sklearn import preprocessing
 
-def fit_predict(classifier, x, data, batch_size, learning_rate, plot_fig= True, n_epochs=250):
+def fit_predict(classifier, x, data, batch_size, learning_rate, plot_fig= True, n_epochs=200):
 
     train, valid = data
     train_x, train_y = train
@@ -20,10 +20,6 @@ def fit_predict(classifier, x, data, batch_size, learning_rate, plot_fig= True, 
     n_valid_batches = valid_x.shape[0]
     n_train_batches //= batch_size
     n_valid_batches //=batch_size
-
-    print n_train_batches
-    print n_valid_batches
-
 
     train_set_x = theano.shared(numpy.asarray(train_x, dtype=theano.config.floatX), borrow=True) #[0:batch_size]
     train_set_y = theano.shared(numpy.asarray(train_y, dtype='int32')) #[0:batch_size]
@@ -35,25 +31,25 @@ def fit_predict(classifier, x, data, batch_size, learning_rate, plot_fig= True, 
     index = T.lscalar()  # index to a [mini]batch
 
     lambda_1 = 0.00
-    lambda_2 = 1e-3
+    lambda_2 = 0.00 #1e-3
 
-    NLL = classifier.layer9.negative_log_likelihood(y)
+    NLL = classifier.layer11.negative_log_likelihood(y)
     L1 = T.sum(abs(classifier.layer0.W)) + T.sum(abs(classifier.layer1.W)) + T.sum(abs(classifier.layer2.W)) + T.sum(abs(classifier.layer3.W)) +\
-         T.sum(abs(classifier.layer4.W)) + T.sum(abs(classifier.layer5.W)) + T.sum(abs(classifier.layer6.W)) + T.sum(abs(classifier.layer7.W))
+         T.sum(abs(classifier.layer4.W)) + T.sum(abs(classifier.layer5.W)) + T.sum(abs(classifier.layer6.W)) + T.sum(abs(classifier.layer7.W))# +\
+         # T.sum(abs(classifier.layer8.W))
 
-    L2 = T.sum(T.sqr(classifier.layer0.W)) + T.sum(T.sqr(classifier.layer1.W)) + T.sum(T.sqr(classifier.layer2.W)) + T.sum(T.sqr(classifier.layer3.W)) + \
-         T.sum(T.sqr(classifier.layer4.W)) + T.sum(T.sqr(classifier.layer5.W)) + T.sum(T.sqr(classifier.layer6.W)) + T.sum(T.sqr(classifier.layer7.W))
+    L2 = T.sum(T.sqr(classifier.layer0.W)) + T.sum(T.sqr(classifier.layer1.W)) + T.sum(T.sqr(classifier.layer2.W)) + T.sum(T.sqr(classifier.layer3.W)) +\
+         T.sum(T.sqr(classifier.layer4.W)) + T.sum(T.sqr(classifier.layer5.W)) + T.sum(T.sqr(classifier.layer6.W)) + T.sum(T.sqr(classifier.layer7.W))#+\
+         # T.sum(T.sqr(classifier.layer8.W))
 
     cost = NLL + lambda_1 * L1 + lambda_2 * L2
     # create a list of gradients for all model parameters
     grads = T.grad(cost, classifier.params)
 
 
-    opt = gd_optimizer('sgd', classifier.params)
+    opt = gd_optimizer('nestrov', classifier.params)
     updates = opt.update_param(grads, classifier.params, learning_rate, momentum= 0.9)
 
-    # compiling a Theano function `train_model` that returns the cost, but
-    # in the same time updates the parameter of the model based on the rules defined in `updates`
     train_model = theano.function(
         inputs=[index],
         outputs=cost,
@@ -64,9 +60,10 @@ def fit_predict(classifier, x, data, batch_size, learning_rate, plot_fig= True, 
         }
     )
 
+    classifier_errorFN = classifier.layer11.errors(y)
     validate_model = theano.function(
         inputs=[index],
-        outputs=classifier.layer9.errors(y),
+        outputs= classifier_errorFN,
         givens={
             x: valid_set_x[index * batch_size:(index + 1) * batch_size],
             y: valid_set_y[index * batch_size:(index + 1) * batch_size]
@@ -76,7 +73,7 @@ def fit_predict(classifier, x, data, batch_size, learning_rate, plot_fig= True, 
 
     Train_model_loss = theano.function(
         inputs=[index],
-        outputs=classifier.layer9.errors(y),
+        outputs=classifier_errorFN,
         givens={
             x: train_set_x[index * batch_size:(index + 1) * batch_size],
             y: train_set_y[index * batch_size:(index + 1) * batch_size]
@@ -84,17 +81,19 @@ def fit_predict(classifier, x, data, batch_size, learning_rate, plot_fig= True, 
         on_unused_input='ignore'
     )
 
+    # theano.printing.debugprint(train_model)
 
-    verifier_model = theano.function(
-        inputs=[index],
-        outputs=classifier.get_poll_out(),
-        givens={
-            x: train_set_x[index * batch_size: (index + 1) * batch_size],
-            y: train_set_y[index * batch_size: (index + 1) * batch_size]
-        },
-        on_unused_input='ignore'
-    )
-
+    # verifier_model = theano.function(
+    #     inputs=[index],
+    #     outputs=classifier.layer8.output,
+    #     givens={
+    #         x: train_set_x[index * batch_size: (index + 1) * batch_size],
+    #         y: train_set_y[index * batch_size: (index + 1) * batch_size]
+    #     },
+    #     on_unused_input='ignore'
+    # )
+    #
+    # print verifier_model(0)
 
     print '... training'
 
@@ -123,6 +122,8 @@ def fit_predict(classifier, x, data, batch_size, learning_rate, plot_fig= True, 
             # train_set_y.set_value(data_y_updated)
 
             tr_cost = train_model(minibatch_idx)
+            # print tr_cost
+
             # temp = verifier_model(0)[0][0]
             # print np.array(temp, dtype=theano.config.floatX) - np.array(layer6_weights_delta, dtype=theano.config.floatX)
             # layer6_weights_delta = temp
@@ -210,6 +211,10 @@ def fit_predict(classifier, x, data, batch_size, learning_rate, plot_fig= True, 
         plt.plot(total_train_err, 'b')
         plt.plot(total_valid_err,'g')
         plt.show()
+
+        total_lost_to_save = total_cost + total_train_err + total_valid_err
+        SaveData(total_lost_to_save, 'weights/FCNN-noP3-2/loss_3.pkl')
+
 
 
 def update_train_sharedVal(train_x, train_y, x, batch_size):

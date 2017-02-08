@@ -1,14 +1,13 @@
+import Image
+import numpy as np
+import cv2
 import sys
 from os import listdir
 from os.path import isfile, join
-import shutil
-import Image
-import cv2
-from CNN.Visualizer.visualize_optimized import *
 
 from CNN.CNN import *
-import numpy as np
-import matplotlib.pyplot as plt
+from CNN.Visualizer.struct6.visualize_optimized import *
+
 
 def load_dataset(dataset_path):
     if (os.path.isfile(dataset_path)):
@@ -21,21 +20,38 @@ def load_dataset(dataset_path):
         print "Dataset not found"
         sys.exit()
 
-def Train():
+def TrainProcess():
     dataset_path = 'Datasets/TLand_2016_faces_13516pos_4279neg.pkl'
     Train, Valid, Test = load_dataset(dataset_path)
+    tr_x, tr_y = Train
+    tr_x = tr_x[0:3558]
+    tr_y = tr_y[0:3558]
+    Train = tr_x,tr_y
+
 
     imageSize = [100, 100]
-    testing = 1
+    testing_itr = 1
+    lr_seq = np.array(testing_itr)
+    epochs = 800
     saving = True
-    for i in range(testing):
-        learning_rate = 10 ** np.random.uniform(-5, -8)
-        print ("learning %d test" %i)
-        cnn = CNN('weights/FCNN-noP/1.pkl', learning_rate= 3e-6, batch_size=50, imageSize = imageSize)
-        if testing > 1:
-            saving = False
-        cnn.fit([Train, Valid], save_params=saving, plot_fig= saving)
+    for i in range(testing_itr):
+        learning_rate = 10 ** np.random.uniform(-7, -8)
 
+        # for lr_idx in range(testing_itr):
+        #     if lr_seq[lr_idx] == learning_rate:
+        #         learning_rate = 10 ** np.random.uniform(-7, -8)
+        #
+        # while learning_rate > 3e-7:
+        #     learning_rate = 10 ** np.random.uniform(-7, -8)
+        #
+        # lr_seq[i] = learning_rate
+
+        print ("learning %d test" %i)
+        if testing_itr > 1:
+            saving = False
+            epochs = 2
+        cnn = CNN('weights/FCNN-noP3-2/1.2.pkl', learning_rate= 1e-8, batch_size=50, epochs = epochs, imageSize = imageSize)
+        cnn.fit([Train, Valid], save_params=saving, plot_fig= saving)
         test_error = cnn.predict(Test, False)
         print "Test loss: %2f   " %(test_error *100)
 
@@ -93,11 +109,12 @@ def Test():
             #     dist = join(testing_folder, 'neg')
             #     shutil.move(currentfile, join(dist, file_names[idx]))
 
-def visualizer():
+def visualizer(params):
     # testing_folder = r'/home/falmasri/Desktop/Tomorrowland Belgium 2016 cropped faces/2/pos'
-    testing_folder = r'/home/falmasri/Desktop'
+    testing_folder = r'/home/falmasri/Desktop/sequential_detection'
     # img_name = r'0_Tomorrowland Belgium 2016 - Steve Aoki 063295.jpg'
     img_name = r'Tomorrowland B.jpg'
+    # img_name = r'Untitled.jpg'
     jpgfile = np.array(Image.open(join(testing_folder,img_name)))
     print("original Image size is:  ", jpgfile.shape)
     # dataset_path = 'Datasets/TLand_2016_faces_13516pos_4279neg.pkl'
@@ -105,7 +122,7 @@ def visualizer():
     # tr_x, tr_y = Train
     # jpgfile = tr_x[0]
 
-    cnn = CNN('weights/5.2.pkl', batch_size=1, imageSize=[jpgfile.shape[0], jpgfile.shape[1]])
+    cnn = CNN(params, batch_size=1, imageSize=[jpgfile.shape[0], jpgfile.shape[1]])
     # print jpgfile[7][6:10]
     # tosave = [jpgfile, cnn.classifier.layer0.W.get_value()]
     # file_name = 'toupload.pkl'
@@ -113,11 +130,11 @@ def visualizer():
     # cPickle.dump(tosave, f, protocol=cPickle.HIGHEST_PROTOCOL)
     # f.close()
 
-    img= Attention_opt(cnn.classifier, cnn.x, cnn.nkerns, jpgfile)
+    img= Attention(cnn.classifier, cnn.x, cnn.nkerns, jpgfile)
     # plt.imshow(img)
     # plt.show()
     # Study3_L0(cnn.classifier, cnn.x, jpgfile)
 
-# visualizer()
+# visualizer('weights/FCNN-noP3/1.4.pkl')
 
-Train()
+TrainProcess()

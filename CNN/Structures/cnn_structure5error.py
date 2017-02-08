@@ -2,16 +2,14 @@ from CNN.Structures.AvgPoolSoftmax import AvgPoolSoftmax
 from CNN.Structures.Constructor import *
 
 
-class CNN_struct4(object):
+class CNN_struct5error(object):
 
     def __getstate__(self):
         weights = [p.get_value() for p in self.params]
-        #return (self.layer0.W, self.layer0.b, self.layer1.W, self.layer1.b, self.layer2.W,
-        #                       self.layer2.b, self.layer3.W, self.layer3.b)
+
         return weights
 
     def __setstate__(self, weights):
-     #   (self.layer0.W, self.layer0.b, self.layer1.W, self.layer1.b, self.layer2.W, self.layer2.b, self.layer3.W, self.layer3.b) = state
         i = iter(weights)
         for p in self.params:
             p.set_value(i.next())
@@ -79,9 +77,11 @@ class CNN_struct4(object):
             rng,
             input=self.layer3.output,
             image_shape=(batch_size, nkerns[3], L3_out_size[0], L3_out_size[1]),
-            filter_shape=(nkerns[4], nkerns[3], L4_k[0], L4_k[1])
+            filter_shape=(nkerns[4], nkerns[3], L4_k[0], L4_k[1]),
+            subsample=(2,2)
         )
-        L4_out_size = [(L3_out_size[0] - L4_k[0] + 1), (L3_out_size[1] - L4_k[1] + 1)]
+        L4_out_size = [int(numpy.ceil(float(L3_out_size[0] - L4_k[0] + 1) / 2)),
+                       int(numpy.ceil(float(L3_out_size[1] - L4_k[1] + 1) / 2))]
 
         # Construct the second convolutional pooling layer
         # filtering reduces the image size to (26-3+1, 26-3+1) = (24, 24)
@@ -110,31 +110,45 @@ class CNN_struct4(object):
         # self.L6_out_size = [(L5_out_size[0] - L6_k[0] + 1) / 2, (L5_out_size[1] - L6_k[1] + 1) / 2]
         L6_out_size = [(L5_out_size[0] - L6_k[0] + 1), (L5_out_size[1] - L6_k[1] + 1)]
 
-        # reduce channel dimension from 512 to 2 using kernel (1,1)
-        # (batchsize, 2, 5, 5)
+        L7_k = [3, 3]
         self.layer7 = LeNetConvPoolLayer(
             rng,
             input=self.layer6.output,
             image_shape=(batch_size, nkerns[6], L6_out_size[0], L6_out_size[1]),
-            filter_shape=(2, nkerns[6], 1, 1)
+            filter_shape=(nkerns[7], nkerns[6], L7_k[0], L7_k[1]),
+            subsample=(2,2)
         )
-        self.L7_out_size = L6_out_size
+        L7_out_size =  [int(numpy.ceil(float(L6_out_size[0] - L7_k[0] + 1) / 2)), int(numpy.ceil(float(L6_out_size[1] - L7_k[1] + 1) / 2))]
 
-        self.layer8 = AvgPoolLayer(
-            input= self.layer7.output,
-            image_shape=self.L7_out_size
+        # reduce channel dimension from 512 to 2 using kernel (1,1)
+        # (batchsize, 2, 5, 5)
+        self.layer8 = LeNetConvPoolLayer(
+            rng,
+            input=self.layer7.output,
+            image_shape=(batch_size, nkerns[7], L6_out_size[0], L6_out_size[1]),
+            filter_shape=(2, nkerns[7], 1, 1)
+        )
+        self.L8_out_size = L7_out_size
+
+        self.layer9 = AvgPoolLayer(
+            input= self.layer8.output,
+            image_shape=self.L8_out_size
         )
 
-        self.layer9_input = self.layer8.output.flatten(2)
+        self.layer10_input = self.layer9.output.flatten(2)
         # classify the values of the fully-connected sigmoidal layer
         # self.layer9 = LogisticRegression(input=self.layer8.output, n_in=500, n_out=2)
-        self.layer9 = AvgPoolSoftmax(input = self.layer9_input)
+        self.layer10 = AvgPoolSoftmax(input = self.layer10_input)
 
         # create a list of all model parameters to be fit by gradient descent
-        self.init_param =  self.layer7.params + self.layer6.params + \
-                      self.layer5.params + self.layer4.params + self.layer3.params + self.layer2.params + self.layer1.params + self.layer0.params
+        self.init_param =  self.layer8.params  + self.layer6.params + \
+                      self.layer5.params + self.layer4.params + self.layer3.params + self.layer2.params + self.layer1.params + self.layer0.params #+ self.layer7.params
 
         self.params = self.init_param
 
     def get_intermediate_sides(self):
-        return  self.layer7.output, self.layer1.output, self.layer0.output
+        return  self.layer8.output, self.layer1.output, self.layer0.output
+
+
+    def get_poll_out(self):
+        return self.layer8.output
