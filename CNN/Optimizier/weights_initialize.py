@@ -90,7 +90,7 @@ def generate_weights(rng, filter_shape, fan_in, fan_out, activation, b_size):
         heUniform = rng.uniform(low=a, high=b, size=filter_size)
 
 
-    W_values = numpy.asarray(heUniform, dtype=theano.config.floatX)
+    W_values = numpy.asarray(W_dist, dtype=theano.config.floatX)
 
     # the bias is a 1D tensor -- one bias per output feature map
     # initialize the baises b as a vector of n_out 0s

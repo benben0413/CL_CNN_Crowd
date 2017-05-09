@@ -18,25 +18,24 @@ def Attention(classifier, x, nkerns, jpgfile):
     layer1_frames = forward_frames[1]
     layer0_frames = forward_frames[2]
 
-    for idx in range(layer7_frames.shape[1]):
-        fname = "imgs/deconv/struct6-2/conv_%i_d.png" % idx
-        plt.imsave(fname, layer7_frames[0][idx], cmap='gray')
-        plt.close()
+    # for idx in range(layer7_frames.shape[1]):
+    #     fname = "imgs/deconv/struct6-2/conv_%i_d.png" % idx
+    #     plt.imsave(fname, layer7_frames[0][idx], cmap='gray')
+    #     plt.close()
 
     # img = []
-    for idx in range(layer7_frames.shape[1]):
-        # bloc_size = layer7_frames.shape[2] * layer7_frames.shape[3]
-        # bloc = np.zeros(bloc_size)
-        # bloc[layer7_frames[0][1].argmax()] = np.max(layer7_frames[0][1])
+    # for idx in range(layer7_frames.shape[1]):
+    bloc_size = layer7_frames.shape[2] * layer7_frames.shape[3]
+    bloc = np.zeros(bloc_size)
+    bloc[layer7_frames[0][1].argmax()] = np.max(layer7_frames[0][1])
 
-        bloc = layer7_frames[0][idx]
-        frame_size = layer7_frames.shape
-        Layer_inp = np.array(bloc.reshape(1, 1, frame_size[2], frame_size[3]), dtype=theano.config.floatX)
-        Visualizer = DeConv_structure(inp, main_weights, frame_size, idx)
-        out_deconv = Visualizer.layer0.output
-        f = theano.function([inp], out_deconv)
-        upsampled_img = f(Layer_inp)
-    #     img.append(upsampled_img)
+    frame_size = layer7_frames.shape
+    Layer_inp = np.array(bloc.reshape(1, 1, frame_size[2], frame_size[3]), dtype=theano.config.floatX)
+    Visualizer = DeConv_structure(inp, main_weights, frame_size, 1)
+    out_deconv = Visualizer.layer0.output
+    f = theano.function([inp], out_deconv)
+    img = f(Layer_inp)
+    # img.append(upsampled_img)
 
         # if idx > 0:
         #     for i in range(upsampled_img.shape[1]):
@@ -46,7 +45,7 @@ def Attention(classifier, x, nkerns, jpgfile):
         #         plt.close()
 
 
-    # return img, layer7_frames
+    return img, layer7_frames
     # for idx in range(layer0_frames.shape[1]):
     #     frame_size = layer0_frames.shape
     #     Layer_inp = bloc.reshape(1, 1, frame_size[2], frame_size[3])
@@ -54,9 +53,9 @@ def Attention(classifier, x, nkerns, jpgfile):
     #     out_deconv = Visualizer.layer0.output
     #     f = theano.function([inp], out_deconv)
     #     upsampled_img = f(Layer_inp)
-        fname = "imgs/deconv/struct6-2/L0_%i_d.png" % idx
-        plt.imsave(fname, upsampled_img[0].transpose(1, 2, 0))
-        plt.close()
+    #     fname = "imgs/deconv/struct6-2/L0_%i_d.png" % idx
+    #     plt.imsave(fname, upsampled_img[0].transpose(1, 2, 0))
+    #     plt.close()
 
 
     #erase features from the image using deconv of specific layer and recall forward pass

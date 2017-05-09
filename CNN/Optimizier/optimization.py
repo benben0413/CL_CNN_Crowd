@@ -38,14 +38,24 @@ class gd_optimizer():
                 updates.append((param_i, param_i + update2))
         elif self.classop == 'sgd':
         # specify how to update the parameters of the model as a list of (variable, update expression) pairs
-        #     for param_i,grad_i in zip(params, grads):
-        #         updates.append((param_i, param_i - learning_rate * grad_i))
-            updates = [
-                (param_i, param_i - learning_rate * grad_i)
-                for param_i, grad_i in zip(params, grads)
-                ]
+            for param_i,grad_i in zip(params, grads):
+                updates.append((param_i, param_i - learning_rate * grad_i))
+            # updates = [
+            #     (param_i, param_i - learning_rate * grad_i)
+            #     for param_i, grad_i in zip(params, grads)
+            #     ]
         return updates
+    def tester(self, grads, params, learning_rate):
+        updates = []
 
+        for param_i, grad_i in zip(params, grads):
+            updates.append((param_i, param_i - learning_rate * grad_i))
+        # updates = [
+        #     (param_i, param_i - learning_rate * grad_i)
+        #     for param_i, grad_i in zip(params, grads)
+        #     ]
+
+        return  updates #grads[60], grads[61], updates[60], updates[61] #params[60], params[61],
     # def floatX(X):
     #     return np.asarray(X, dtype=theano.config.floatX)
     #

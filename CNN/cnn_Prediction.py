@@ -22,7 +22,7 @@ def cnn_predict(classifier,x, test_datasets, batch_size):
     n_test_batches //= batch_size
 
 
-    output = classifier.layer11.errors(y)
+    output = classifier.predictor.errors(y)
 
     Test_model = theano.function(
         inputs = [index],

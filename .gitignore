@@ -6,8 +6,8 @@ Datasets/
 converter.sh
 helpers/pos_neg_sizes.pkl
 helpers/preparation/
-mainPage.py
-main_gui.py
+GUI/mainPage.py
+GUI/main_gui.py
 *.pkl
 weights/1.1.pkl
 weights/1.2.1.pkl

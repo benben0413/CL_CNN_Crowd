@@ -187,4 +187,4 @@ class AvgPoolLayer(object):
             ignore_border=True,
             mode= 'average_exc_pad'
         )
-        self.output = pooled_out * total_cells
+        self.output = pooled_out #* total_cells
